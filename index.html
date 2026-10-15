@@ -154,7 +154,7 @@ dt{color:var(--muted)} dd{margin:0;font-weight:600}
 .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:3px}
 .seg button{height:40px;border:none;border-radius:9px;background:transparent;font-size:14px;font-weight:600}
 .seg button[aria-pressed="true"]{background:var(--on-bg);color:var(--on-ink)}
-.slots{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px}
 .slot{aspect-ratio:63/88;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:12px;font-weight:700;padding:0}
 .slot.have{border:1px solid rgba(22,24,29,.12)}
 .slot.miss{border:1.5px dashed var(--line2);background:transparent;color:var(--muted);font-weight:600}
@@ -332,13 +332,14 @@ nav.tabs button.justnow::before{animation:pillIn .32s var(--ease-out)}
 .semb.haslogo img{opacity:1}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .semb img{background:#2A2D36}}
 .slotimg{position:relative;padding:0;border:none;background:none;display:block;cursor:pointer;border-radius:6px}
-.slotimg .face.mini{width:100%;border-radius:5px}
-.slotnum{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);background:rgba(16,17,22,.78);color:#fff;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:6px;white-space:nowrap;z-index:3}
-.face.ghostcard{filter:grayscale(1) brightness(.92);opacity:.42;box-shadow:none}
+.slotimg .face.mini{width:100%;border-radius:7px}
+.slotnum{position:absolute;left:50%;bottom:5px;transform:translateX(-50%);background:rgba(16,17,22,.8);color:#fff;font-size:12px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;z-index:3}
+.face.ghostcard{filter:grayscale(1) brightness(.95);opacity:.5;box-shadow:none}
 .face.ghostcard.foilfx::after,.face.ghostcard.foilfx::before{display:none}
 .slotimg.missing .slotnum{background:rgba(16,17,22,.6)}
 .slotimg:active .face{transform:scale(.95)}
 .ckrow .face.ghostcard{opacity:.5}
+.face.mini{height:auto}
 </style>
 </head>
 <body>
@@ -939,7 +940,7 @@ function setDetailHTML(sid){
               :'<button class="slot miss" data-act="preview" data-id="'+id+'" style="'+sec+'" aria-label="'+esc(aria)+'">'+lab+(rr?'<small>'+rr+'</small>':'')+'</button>';
     }else{
       slots+='<button class="ckrow'+(q?' have':'')+'" data-act="preview" data-id="'+id+'" aria-label="'+esc(aria)+'">'+
-        (c?cardFace(id,{mini:true,w:'44px',cls:q?'':'ghostcard'}):'<span class="mini ckmiss'+(n>s.total?' sec':'')+'" style="width:44px;height:61px;font-size:12px">'+lab+'</span>')+
+        (c?cardFace(id,{mini:true,w:'64px',cls:q?'':'ghostcard'}):'<span class="mini ckmiss'+(n>s.total?' sec':'')+'" style="width:64px;height:89px;font-size:13px">'+lab+'</span>')+
         '<span class="grow" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:700'+(nm?'':';color:var(--muted);font-weight:600')+'">'+esc(nm||'Card '+lab)+'</span>'+
         '<span class="sub" style="font-size:12px">'+lab+'/'+('00'+s.total).slice(-3)+(c&&c.rarity?' · '+esc(c.rarity):n>s.total?' · Secret rare':'')+'</span></span>'+
         (q?'<span class="ckown">Owned ×'+q+'</span>':'<span class="ckmissing">Missing</span>')+'</button>';
