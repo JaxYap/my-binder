@@ -10,7 +10,10 @@
 <meta name="apple-mobile-web-app-title" content="My Binder">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<title>My Binder — prototype</title>
+<title>My Binder</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
 <style>
 :root{
@@ -322,6 +325,12 @@ nav.tabs button.justnow::before{animation:pillIn .32s var(--ease-out)}
 .sgchev{transition:transform .25s var(--ease-out)}
 .switch span{transition:transform .22s var(--ease-out)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after,::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;transition:none!important}}
+.face img.real{z-index:0}
+.face.foilfx::before,.face.foilfx::after{z-index:1}
+.semb{position:relative;overflow:hidden}
+.semb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:5px;box-sizing:border-box;background:#fff;opacity:0;transition:opacity .2s}
+.semb.haslogo img{opacity:1}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .semb img{background:#2A2D36}}
 </style>
 </head>
 <body>
@@ -518,11 +527,15 @@ function artSVG(c,v){
   }
   return out+'</svg>';
 }
+var IMGSRC={"SVI": ["sv1", 0], "PAL": ["sv2", 0], "OBF": ["sv3", 0], "MEW": ["sv3pt5", 0], "PAR": ["sv4", 0], "PAF": ["sv4pt5", 0], "TEF": ["sv5", 0], "TWM": ["sv6", 0], "SFA": ["sv6pt5", 0], "SCR": ["sv7", 0], "SSP": ["sv8", 0], "PRE": ["sv8pt5", 0], "JTG": ["sv9", 0], "DRI": ["sv10", 0], "BLK": ["zsv10pt5", 0], "WHT": ["rsv10pt5", 0], "ME01": ["me1", 0], "ME02": ["me2", 0], "ME2.5": ["me2pt5", 1], "ME03": ["me3", 1], "ME04": ["me4", 1], "ME05": ["me5", 1], "30C": ["me55", 1]};
+function cardImg(c,large){var m=IMGSRC[c.set];if(!m)return '';
+  return m[1]?'https://images.scrydex.com/pokemon/'+m[0]+'-'+c.no+'/'+(large?'large':'small'):'https://images.pokemontcg.io/'+m[0]+'/'+c.no+(large?'_hires':'')+'.png';}
+function setLogo(id){var m=IMGSRC[id];if(!m)return '';return m[1]?'https://images.scrydex.com/pokemon/'+m[0]+'-logo/logo':'https://images.pokemontcg.io/'+m[0]+'/logo.png';}
 function cardFace(id,o){
   o=o||{};var c=CARD[id];var v=o.v||'Normal';var cls='face'+(o.mini?' mini':'')+(v==='Foil'||c.secret?' foilfx':'')+(o.cls?' '+o.cls:'');
   var st=o.w?' style="width:'+o.w+'"':'';
   var tag=o.tag||'span',attrs=o.attrs||'';
-  return '<'+tag+' class="'+cls+'"'+st+(attrs?' '+attrs:'')+'>'+(photoOf(id)?imgTag(id,o.alt||''):artSVG(c,v))+
+  return '<'+tag+' class="'+cls+'"'+st+(attrs?' '+attrs:'')+'>'+(photoOf(id)?imgTag(id,o.alt||''):artSVG(c,v)+(cardImg(c)?'<img class="real" src="'+cardImg(c,o.large)+'" alt="'+esc(o.alt||c.name)+'" loading="lazy" decoding="async" onerror="this.remove()">':''))+
     (o.qty?'<span class="qty">\u00D7'+o.qty+'</span>':'')+(o.badge?'<span class="vbx">'+o.badge+'</span>':'')+'</'+tag+'>';
 }
 function short(c){return c.num.split('/')[0];}
@@ -664,7 +677,7 @@ function binderResultsHTML(){
     var cps=list.reduce(function(n,e){return n+e.qty;},0);
     var uniq={};list.forEach(function(e){uniq[e.id]=1;});
     return sep+'<section class="sgroup"><button class="sghead" data-act="fold" data-v="'+k+'" aria-expanded="'+open+'">'+
-      (byReg?regBadge(k.slice(4),40):'<span class="semb" style="width:40px;height:40px">'+setEmblemSVG(k,40)+'</span>')+'<span class="sgname"><span>'+(byReg?(k==='reg:-'?'No regulation mark':'Regulation mark '+k.slice(4)):esc(st.name))+'</span><span class="sub" style="font-size:12px;font-weight:500">'+plural(Object.keys(uniq).length,'card','cards')+', '+plural(cps,'copy','copies')+(byReg?regSets(list):'. Released '+esc(st.released))+'</span></span>'+
+      (byReg?regBadge(k.slice(4),40):logoBox(k,56,40))+'<span class="sgname"><span>'+(byReg?(k==='reg:-'?'No regulation mark':'Regulation mark '+k.slice(4)):esc(st.name))+'</span><span class="sub" style="font-size:12px;font-weight:500">'+plural(Object.keys(uniq).length,'card','cards')+', '+plural(cps,'copy','copies')+(byReg?regSets(list):'. Released '+esc(st.released))+'</span></span>'+
       '<span class="sgchev'+(open?' open':'')+'">'+I.down+'</span></button>'+
       (open?(S.b.view==='grid'?'<div class="grid">'+list.map(gridItem).join('')+'</div>':'<div class="list">'+list.map(listItem).join('')+'</div>'):'')+'</section>';
   }).join('');
@@ -746,7 +759,7 @@ function cardHTML(id){
       '<dl><dt>Set</dt><dd>'+esc(SET[c.set].name)+' ('+esc(SET[c.set].code)+')</dd><dt>Number</dt><dd>'+esc(c.num)+'</dd><dt>Type</dt><dd>'+esc(c.type)+'</dd>'+(c.reg?'<dt>Regulation</dt><dd><span class="regb" style="width:20px;height:20px;font-size:12px;display:inline-flex;vertical-align:-4px">'+esc(c.reg)+'</span></dd>':'')+(c.rarity?'<dt>Rarity</dt><dd>'+esc(c.rarity)+'</dd>':'')+'</dl>'+
       '<span class="own">You own '+qtyOf(id)+'</span></div></div>'+
     '<section class="section"><h2>Card image</h2>'+
-      '<p class="tip" style="margin:0">'+(photoOf(id)?'Showing your own photo. ':'')+'In the real app the official English card image loads automatically. You can also use a photo of your own card instead.</p>'+
+      '<p class="tip" style="margin:0">'+(photoOf(id)?'Showing your own photo. ':'')+'The official English card image loads automatically. You can use a photo of your own card instead.</p>'+
       '<div class="photo-actions"><label class="photo-btn'+(photoOf(id)?'':' primary')+'"><input type="file" id="photo-in" accept="image/*" data-id="'+id+'">'+
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'+
       (photoOf(id)?'Replace photo':'Add a photo of your card')+'</label>'+
@@ -862,8 +875,10 @@ function regBadge(m,size){
   return '<span class="regb" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.55)+'px" aria-hidden="true">'+esc(m==='-'?'–':m)+'</span>';
 }
 function regSets(list){var o={};list.forEach(function(e){o[SET[CARD[e.id].set].code]=SET[CARD[e.id].set].order;});var k=Object.keys(o).sort(function(a,b){return o[b]-o[a];});return '. '+(k.length>4?k.slice(0,4).join(', ')+' +'+(k.length-4):k.join(', '));}
+function logoBox(id,w,h){var l=setLogo(id);
+  return '<span aria-hidden="true" class="semb'+(l?' haslogo':'')+'" style="width:'+w+'px;height:'+h+'px">'+setEmblemSVG(id,h)+(l?'<img src="'+l+'" alt="" loading="lazy" onerror="this.parentNode.classList.remove(\'haslogo\');this.remove()">':'')+'</span>';}
 function setBadge(st){
-  return '<span aria-hidden="true" class="semb" style="width:52px;height:52px">'+setEmblemSVG(st.id,52)+'</span>';
+  return logoBox(st.id,72,52);
 }
 function setsHTML(){
   var ownedSets={};ownedIds().forEach(function(id){ownedSets[CARD[id].set]=1;});
@@ -890,6 +905,7 @@ function setsHTML(){
   html+='<section class="backup"><h2 style="font-family:var(--display);font-size:22px">Backup</h2><p>Your binder, decks and photos are stored only on this device. Save a backup file to iCloud Drive or Files now and then, and load it to restore everything on a new phone.</p>'+
     '<div class="row"><button class="b1" data-act="export">Save backup</button><label class="b2" style="display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative">Load backup<input type="file" id="load-in" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0"></label></div>'+
     '<span style="font-size:12px;opacity:.75">'+esc(lastBackupText())+'</span></section>'+
+    '<button class="btn-ghost" data-act="clearimgs" style="align-self:center;color:var(--muted);font-size:14px">Clear saved card images</button>'+
     '<button class="btn-ghost" data-act="resetdemo" style="align-self:center;color:var(--muted);font-size:14px;margin-top:6px">Reset prototype to sample cards</button></main>';
   return html;
 }
@@ -1073,7 +1089,14 @@ async function saveBackup(){
   var name='my-binder-backup-'+new Date().toISOString().slice(0,10)+'.json';
   var dl=null;
   try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(e){dl=null;}
-  if(!dl){S.listText=json;S.listTitle='Backup';renderLayer();return;}
+  if(!dl){
+    try{var file=new File([json],name,{type:'application/json'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'My Binder backup'});}
+      else{var a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);}
+      try{localStorage.setItem(LAST_KEY,String(Date.now()));}catch(e){}
+      showToast({text:'Backup ready',sub:'Choose “Save to Files” to keep it in iCloud Drive'});if(route().name==='sets')render();
+    }catch(err){if(err&&err.name==='AbortError')showToast({text:'Backup not saved'});else{S.listText=json;S.listTitle='Backup';renderLayer();}}
+    return;}
   try{await dl.save({filename:name,data:json});
     try{localStorage.setItem(LAST_KEY,String(Date.now()));}catch(e){}
     showToast({text:'Backup saved',sub:name});if(route().name==='sets')render();
@@ -1122,7 +1145,7 @@ function renderLayer(){
   if(S.preview)h+=previewHTML(S.preview);
   if(S.pendingLoad)h+=confirmLoadHTML();
   if(S.listText!=null)h+='<div class="overlay"><button class="scrim" data-act="closelist" aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-label="'+(S.listTitle||'Decklist')+'"><div class="grab"></div><div class="sheet-body"><h2 style="font-family:var(--display);font-size:22px">'+(S.listTitle||'Decklist')+'</h2><p class="sub" style="margin:0">'+(S.listTitle==='Backup'?'Saving files isn\u2019t available here. Select all, copy, and paste it into a note or a .json file to keep it.':'Select all and copy. This format pastes into Pokémon TCG Live.')+'</p><textarea class="field" rows="14" readonly style="font-size:14px">'+esc(S.listText)+'</textarea></div><div class="sheet-foot"><button class="btn" data-act="closelist">Done</button></div></div></div>';
-  if(S.zoom){var c=CARD[S.zoom];h+='<div class="zoom" role="dialog" aria-modal="true" aria-label="'+esc(c.name)+' card image">'+cardFace(S.zoom,{w:'min(300px,74vw)',v:(copiesOf(S.zoom)[Math.min(S.card.sel,copiesOf(S.zoom).length-1)]||{}).variant,alt:'Your photo of '+c.name})+'<p style="color:#C9CCD3;font-size:13px;margin:0;text-align:center;max-width:280px">'+(photoOf(S.zoom)?'Your photo':'Illustration for the prototype. The official card image shows here in the real app.')+'</p>'+'<button data-act="closezoom">Close</button></div>';}
+  if(S.zoom){var c=CARD[S.zoom];h+='<div class="zoom" role="dialog" aria-modal="true" aria-label="'+esc(c.name)+' card image">'+cardFace(S.zoom,{large:true,w:'min(300px,74vw)',v:(copiesOf(S.zoom)[Math.min(S.card.sel,copiesOf(S.zoom).length-1)]||{}).variant,alt:'Your photo of '+c.name})+'<p style="color:#C9CCD3;font-size:13px;margin:0;text-align:center;max-width:280px">'+(photoOf(S.zoom)?'Your photo':'')+'</p>'+'<button data-act="closezoom">Close</button></div>';}
   el.innerHTML=h;
 }
 
@@ -1265,6 +1288,7 @@ document.addEventListener('click',function(e){
     case 'pv-add':var pc=CARD[id];addOne(id);S.preview=null;var psc=document.querySelector('.scroll');var py=psc?psc.scrollTop:0;render();var psc2=document.querySelector('.scroll');if(psc2)psc2.scrollTop=py;break;
     case 'addmore':S.add.limit=(S.add.limit||30)+30;var ar=document.getElementById('ares');var ay=ar.scrollTop;ar.innerHTML=addResults();ar.scrollTop=ay;break;
     case 'findmissing':S.preview=null;S.tab='add';S.add={query:v,session:{}};S.stack=[{name:'add'}];S.dir='enter';render();break;
+    case 'clearimgs':if(window.caches){caches.delete('binder-images').then(function(){showToast({text:'Saved card images cleared',sub:'They download again when you view them'});});}break;
     case 'export':saveBackup();break;
     case 'cancelload':animateClose(function(){S.pendingLoad=null;renderLayer();});break;
     case 'doload':var b=S.pendingLoad;var snapI=JSON.stringify(inv),snapD=JSON.stringify(decks),snapP=JSON.stringify(photos),snapF=JSON.stringify(folded);
@@ -1298,6 +1322,7 @@ document.addEventListener('keydown',function(e){
   document.addEventListener('click',function(e){if(suppress){e.stopPropagation();e.preventDefault();suppress=false;}},true);
   document.addEventListener('dragstart',function(e){if(e.target.closest('.scroll'))e.preventDefault();});
 })();
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(function(){});}
 render();
 })();
 </script>
