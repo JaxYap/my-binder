@@ -331,6 +331,14 @@ nav.tabs button.justnow::before{animation:pillIn .32s var(--ease-out)}
 .semb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:5px;box-sizing:border-box;background:#fff;opacity:0;transition:opacity .2s}
 .semb.haslogo img{opacity:1}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .semb img{background:#2A2D36}}
+.slotimg{position:relative;padding:0;border:none;background:none;display:block;cursor:pointer;border-radius:6px}
+.slotimg .face.mini{width:100%;border-radius:5px}
+.slotnum{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);background:rgba(16,17,22,.78);color:#fff;font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:6px;white-space:nowrap;z-index:3}
+.face.ghostcard{filter:grayscale(1) brightness(.92);opacity:.42;box-shadow:none}
+.face.ghostcard.foilfx::after,.face.ghostcard.foilfx::before{display:none}
+.slotimg.missing .slotnum{background:rgba(16,17,22,.6)}
+.slotimg:active .face{transform:scale(.95)}
+.ckrow .face.ghostcard{opacity:.5}
 </style>
 </head>
 <body>
@@ -927,11 +935,11 @@ function setDetailHTML(sid){
     var aria=(nm?nm+', ':'Card ')+lab+(c&&c.rarity?', '+c.rarity:n>s.total?', secret rare':'')+(q?', you own '+q:', missing')+'. Show details';
     if(view==='grid'){
       var sec=n>s.total&&!q?'border-color:#B08A2E':'';
-      slots+=q?'<button class="slot have" data-act="preview" data-id="'+id+'" style="'+tint(c.type)+'" aria-label="'+esc(aria)+'">'+lab+'<small>'+(rr?rr+' ':'')+'×'+q+'</small></button>'
+      slots+=c?'<button class="slotimg'+(q?'':' missing')+'" data-act="preview" data-id="'+id+'" aria-label="'+esc(aria)+'">'+cardFace(id,{mini:true,cls:q?'':'ghostcard'})+'<span class="slotnum">'+lab+(q?' ×'+q:'')+'</span></button>'
               :'<button class="slot miss" data-act="preview" data-id="'+id+'" style="'+sec+'" aria-label="'+esc(aria)+'">'+lab+(rr?'<small>'+rr+'</small>':'')+'</button>';
     }else{
       slots+='<button class="ckrow'+(q?' have':'')+'" data-act="preview" data-id="'+id+'" aria-label="'+esc(aria)+'">'+
-        (q?cardFace(id,{mini:true,w:'38px'}):'<span class="mini ckmiss'+(n>s.total?' sec':'')+'" style="width:38px;height:53px;font-size:12px">'+lab+'</span>')+
+        (c?cardFace(id,{mini:true,w:'44px',cls:q?'':'ghostcard'}):'<span class="mini ckmiss'+(n>s.total?' sec':'')+'" style="width:44px;height:61px;font-size:12px">'+lab+'</span>')+
         '<span class="grow" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:700'+(nm?'':';color:var(--muted);font-weight:600')+'">'+esc(nm||'Card '+lab)+'</span>'+
         '<span class="sub" style="font-size:12px">'+lab+'/'+('00'+s.total).slice(-3)+(c&&c.rarity?' · '+esc(c.rarity):n>s.total?' · Secret rare':'')+'</span></span>'+
         (q?'<span class="ckown">Owned ×'+q+'</span>':'<span class="ckmissing">Missing</span>')+'</button>';
@@ -946,7 +954,7 @@ function setDetailHTML(sid){
     '<div class="row between sub"><span>'+hv+' of '+tot+' collected</span><span>'+(tot-hv)+' missing</span></div>'+
     '<div class="bar"><i style="width:'+(tot?(hv/tot*100).toFixed(1):0)+'%;'+(hv?'':'min-width:0')+'"></i></div>'+
     '<div class="seg" role="group" aria-label="Show">'+['All','Owned','Missing'].map(function(m){return '<button data-act="setmode" data-v="'+m+'" aria-pressed="'+(mode===m)+'">'+m+'</button>';}).join('')+'</div></header>'+
-    '<main class="scroll"><div class="row between" style="margin-bottom:10px"><span class="sub">'+(view==='list'?'Tap a card to see it':'Tap a number to see the card')+'</span><div class="row" style="gap:0;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--surface)">'+
+    '<main class="scroll"><div class="row between" style="margin-bottom:10px"><span class="sub">'+(view==='list'?'Tap a card to see it':'Tap a card to see it')+'</span><div class="row" style="gap:0;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--surface)">'+
       '<button data-act="setview" data-v="list" aria-label="Show names" aria-pressed="'+(view==='list')+'" style="height:40px;padding:0 12px;border:none;font-size:13px;font-weight:600;'+(view==='list'?'background:var(--on-bg);color:var(--on-ink)':'background:var(--surface);color:var(--ink2)')+'">Names</button>'+
       '<button data-act="setview" data-v="grid" aria-label="Show number grid" aria-pressed="'+(view==='grid')+'" style="height:40px;padding:0 12px;border:none;font-size:13px;font-weight:600;'+(view==='grid'?'background:var(--on-bg);color:var(--on-ink)':'background:var(--surface);color:var(--ink2)')+'">Numbers</button></div></div>'+
       '<div class="'+(view==='grid'?'slots':'list')+'">'+slots+'</div>'+(!shown?'<div class="empty"><div class="ttl">'+(mode==='Owned'?'None yet':'All collected')+'</div><p>'+(mode==='Owned'?'Cards you add from this set will fill in here.':'You have every card in this view.')+'</p></div>':'')+'</main>';
@@ -1053,7 +1061,7 @@ function previewHTML(id){
   var parts=id.split('-'),sid=parts[0],n=+parts.slice(1).join('-');var st=SET[sid];var c=CARD[id];
   var lab=('00'+n).slice(-3),num=lab+'/'+('00'+st.total).slice(-3);
   var q=qtyOf(id);
-  var tile=c?cardFace(id,{w:'150px',v:q?entriesOf(id)[0].v:variantsFor(c)[0]}):'<span class="tile" style="width:150px;flex-shrink:0;'+(c?tint(c.type):'background:var(--bg);color:var(--muted);border:1.5px dashed var(--line2)')+'"><span class="t">'+esc(c?(rab(c)||c.type||st.code):st.code)+'</span><span class="n" style="font-size:44px">'+lab+'</span><span class="v">'+(c?'Card image':'Image loads in the real app')+'</span></span>';
+  var tile=c?cardFace(id,{cls:q?'':'ghostcard',w:'150px',v:q?entriesOf(id)[0].v:variantsFor(c)[0]}):'<span class="tile" style="width:150px;flex-shrink:0;'+(c?tint(c.type):'background:var(--bg);color:var(--muted);border:1.5px dashed var(--line2)')+'"><span class="t">'+esc(c?(rab(c)||c.type||st.code):st.code)+'</span><span class="n" style="font-size:44px">'+lab+'</span><span class="v">'+(c?'Card image':'Image loads in the real app')+'</span></span>';
   var owned='';
   if(q){owned='<div class="panel" style="padding:12px 14px;gap:6px;border-color:var(--good)"><span style="font-weight:700;color:var(--good)">You own '+q+'</span><span class="row" style="gap:6px;flex-wrap:wrap">'+entriesOf(id).map(function(e){return (vbadge(e.v)||'<span class="vb n">Normal</span>')+'<span class="sub" style="font-size:12px">×'+e.qty+'</span>';}).join('')+'</span></div>';}
   else owned='<div class="panel" style="padding:12px 14px;border-color:var(--danger)"><span style="font-weight:700;color:var(--danger)">Missing from your binder</span></div>';
